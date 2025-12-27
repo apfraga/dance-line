@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dance Line</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect fill='%239bbc0f' width='32' height='32' rx='4'/><rect fill='%230f380f' x='12' y='4' width='8' height='6'/><rect fill='%230f380f' x='10' y='10' width='12' height='10'/><rect fill='%230f380f' x='6' y='12' width='4' height='6'/><rect fill='%230f380f' x='22' y='12' width='4' height='6'/><rect fill='%230f380f' x='10' y='20' width='4' height='8'/><rect fill='%230f380f' x='18' y='20' width='4' height='8'/></svg>">
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QDJKYX027L"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-QDJKYX027L');
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+
+        .game-container {
+            position: relative;
+        }
+
+        .screen {
+            background: #9bbc0f;
+            border-radius: 8px;
+            padding: 12px;
+            position: relative;
+            overflow: visible;
+            box-shadow: 
+                0 0 0 4px #0f380f,
+                0 0 0 8px #306230,
+                0 20px 60px rgba(0,0,0,0.5),
+                inset 0 0 30px rgba(0,0,0,0.15);
+        }
+
+        .screen::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,0.03) 2px,
+                rgba(0,0,0,0.03) 4px
+            );
+            pointer-events: none;
+            border-radius: 8px;
+        }
+
+        .screen-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            border-bottom: 3px solid #0f380f;
+            margin-bottom: 10px;
+        }
+
+        .game-title {
+            color: #0f380f;
+            font-size: 18px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .score-display {
+            color: #0f380f;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .help-btn {
+            background: #0f380f;
+            color: #9bbc0f;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+
+        .help-btn:hover {
+            transform: scale(1.1);
+        }
+
+        #gameCanvas {
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #9bbc0f;
+            border: 3px solid #0f380f;
+            padding: 25px;
+            text-align: center;
+            display: none;
+            z-index: 100;
+            min-width: 280px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .overlay h2 {
+            color: #0f380f;
+            font-size: 20px;
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+        }
+
+        .overlay p {
+            color: #0f380f;
+            font-size: 13px;
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .overlay .highlight {
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        .blink-text {
+            color: #0f380f;
+            font-size: 11px;
+            margin-top: 15px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .help-content {
+            text-align: left;
+        }
+
+        .help-content h3 {
+            color: #0f380f;
+            font-size: 14px;
+            margin: 15px 0 8px 0;
+            border-bottom: 2px solid #306230;
+            padding-bottom: 4px;
+        }
+
+        .help-content ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .help-content li {
+            color: #0f380f;
+            font-size: 12px;
+            margin: 6px 0;
+            padding-left: 15px;
+            position: relative;
+        }
+
+        .help-content li::before {
+            content: '►';
+            position: absolute;
+            left: 0;
+            color: #306230;
+        }
+
+        .key {
+            display: inline-block;
+            background: #0f380f;
+            color: #9bbc0f;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            margin: 0 2px;
+        }
+
+        #gameCanvas {
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        /* Mobile controls - hidden by default, shown on touch devices */
+        .mobile-controls {
+            display: none;
+            position: relative;
+            margin-top: 40px;
+            touch-action: none;
+            z-index: 100;
+        }
+
+        .dpad {
+            display: grid;
+            grid-template-columns: 60px 60px 60px;
+            grid-template-rows: 60px 60px 60px;
+            gap: 4px;
+        }
+
+        .dpad-btn {
+            background: rgba(15, 56, 15, 0.7);
+            border: 2px solid #0f380f;
+            border-radius: 8px;
+            color: #9bbc0f;
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .dpad-btn:active {
+            background: #0f380f;
+        }
+
+        .dpad-btn.up { grid-column: 2; grid-row: 1; }
+        .dpad-btn.left { grid-column: 1; grid-row: 2; }
+        .dpad-btn.right { grid-column: 3; grid-row: 2; }
+        .dpad-btn.down { grid-column: 2; grid-row: 3; }
+
+        .dpad-center {
+            grid-column: 2;
+            grid-row: 2;
+            background: rgba(15, 56, 15, 0.3);
+            border: 2px solid rgba(15, 56, 15, 0.4);
+            border-radius: 8px;
+        }
+
+        /* Mobile styles */
+        @media (pointer: coarse), (max-width: 500px) {
+            body {
+                min-height: 100dvh;
+                justify-content: flex-start;
+                padding-top: 15px;
+                overflow-y: auto;
+            }
+
+            .mobile-controls {
+                display: flex;
+                justify-content: center;
+            }
+
+            .screen {
+                padding: 8px;
+                max-width: 95vw;
+            }
+
+            .screen-header {
+                padding: 4px 8px;
+                margin-bottom: 6px;
+            }
+
+            .game-title {
+                font-size: 14px;
+            }
+
+            .score-display {
+                font-size: 12px;
+            }
+
+            #gameCanvas {
+                max-width: 100%;
+                height: auto;
+            }
+
+            .overlay {
+                padding: 15px;
+                min-width: 200px;
+                max-width: 90%;
+            }
+
+            .overlay h2 {
+                font-size: 16px;
+            }
+
+            .overlay p {
+                font-size: 11px;
+            }
+
+            .help-content h3 {
+                font-size: 12px;
+                margin: 10px 0 6px 0;
+            }
+
+            .help-content li {
+                font-size: 11px;
+            }
+        }
+
+        @media (pointer: fine) and (min-width: 501px) {
+            .help-content .touch-controls {
+                display: none !important;
+            }
+            
+            .keyboard-controls {
+                display: block !important;
+            }
+            
+            .touch-controls {
+                display: none !important;
+            }
+        }
+
+        .help-content .touch-controls {
+            display: none;
+            text-align: center;
+            font-size: 13px;
+            color: #0f380f;
+        }
+
+        /* Hide/show touch vs keyboard text */
+        .touch-controls {
+            display: none;
+        }
+
+        .keyboard-controls {
+            display: block;
+        }
+
+        @media (pointer: coarse), (max-width: 500px) {
+            .touch-controls {
+                display: block !important;
+            }
+
+            .keyboard-controls {
+                display: none !important;
+            }
+            
+            .help-content .touch-controls {
+                display: block !important;
+            }
+            
+            .help-content .keyboard-controls {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="screen">
+            <div class="screen-header">
+                <span class="game-title">DANCE LINE</span>
+                <div class="header-right">
+                    <span class="score-display">DANCERS: <span id="score">3</span></span>
+                    <button class="help-btn" id="helpBtn">?</button>
+                </div>
+            </div>
+            <canvas id="gameCanvas" width="400" height="300"></canvas>
+            
+            <!-- Game Over Overlay -->
+            <div class="overlay" id="gameOver">
+                <h2>GAME OVER</h2>
+                <p class="highlight">Your Line: <span id="finalDancers">0</span> Dancers</p>
+                <p class="blink-text keyboard-controls">PRESS SPACE TO PLAY AGAIN</p>
+                <p class="blink-text touch-controls">TAP TO PLAY AGAIN</p>
+            </div>
+            
+            <!-- Help Overlay -->
+            <div class="overlay" id="helpOverlay">
+                <h2>HOW TO PLAY</h2>
+                <div class="help-content">
+                    <h3>GOAL</h3>
+                    <p style="text-align: center; font-size: 13px;">
+                        Build the longest dance line possible.<br>
+                        Pick up waiting dancers to grow your line.
+                    </p>
+                    
+                    <h3>CONTROLS</h3>
+                    <div class="keyboard-controls">
+                        <ul>
+                            <li><span class="key">↑</span> <span class="key">↓</span> <span class="key">←</span> <span class="key">→</span> Move your line</li>
+                            <li><span class="key">SPACE</span> Pause the game</li>
+                        </ul>
+                    </div>
+                    <div class="touch-controls">
+                        <p>Use the arrow buttons to steer</p>
+                        <p>Tap the screen to pause</p>
+                    </div>
+                    
+                    <h3>RULES</h3>
+                    <ul>
+                        <li>Don't hit the walls</li>
+                        <li>Don't crash into your own line</li>
+                        <li>The longer your line, the faster you go</li>
+                    </ul>
+                </div>
+                <p class="blink-text keyboard-controls">PRESS ANY KEY TO START</p>
+                <p class="blink-text touch-controls">TAP TO START</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile D-Pad Controls -->
+    <div class="mobile-controls" id="mobileControls">
+        <div class="dpad">
+            <button class="dpad-btn up" id="btnUp">▲</button>
+            <button class="dpad-btn left" id="btnLeft">◄</button>
+            <div class="dpad-center"></div>
+            <button class="dpad-btn right" id="btnRight">►</button>
+            <button class="dpad-btn down" id="btnDown">▼</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('score');
+        const gameOverEl = document.getElementById('gameOver');
+        const finalDancersEl = document.getElementById('finalDancers');
+        const helpOverlay = document.getElementById('helpOverlay');
+        const helpBtn = document.getElementById('helpBtn');
+
+        // Game constants
+        const GRID_SIZE = 12;
+        const GRID_WIDTH = Math.floor(canvas.width / GRID_SIZE);
+        const GRID_HEIGHT = Math.floor(canvas.height / GRID_SIZE);
+        
+        // Colors matching green LCD screen
+        const DARK_GREEN = '#0f380f';
+        const MID_GREEN = '#306230';
+        const LIGHT_GREEN = '#8bac0f';
+        const BG_GREEN = '#9bbc0f';
+
+        // Game state
+        let danceLine = [];
+        let direction = { x: 1, y: 0 };
+        let nextDirection = { x: 1, y: 0 };
+        let inputQueue = []; // Queue for buffering inputs
+        let newPerson = { x: 0, y: 0 };
+        let gameSpeed = 150;
+        let isGameOver = false;
+        let isPaused = false;
+        let isShowingHelp = true;
+        let gameStarted = false;
+        let danceFrame = 0;
+        let lastUpdateTime = 0;
+
+        // Initialize game
+        function init() {
+            danceLine = [
+                { x: 5, y: Math.floor(GRID_HEIGHT / 2) },
+                { x: 4, y: Math.floor(GRID_HEIGHT / 2) },
+                { x: 3, y: Math.floor(GRID_HEIGHT / 2) }
+            ];
+            direction = { x: 1, y: 0 };
+            nextDirection = { x: 1, y: 0 };
+            inputQueue = [];
+            isGameOver = false;
+            isPaused = false;
+            gameSpeed = 150;
+            lastUpdateTime = performance.now();
+            updateDancerCount();
+            gameOverEl.style.display = 'none';
+            spawnNewPerson();
+        }
+
+        function updateDancerCount() {
+            scoreDisplay.textContent = danceLine.length;
+        }
+
+        // Spawn a new person to pick up
+        function spawnNewPerson() {
+            let valid = false;
+            while (!valid) {
+                newPerson = {
+                    x: Math.floor(Math.random() * GRID_WIDTH),
+                    y: Math.floor(Math.random() * GRID_HEIGHT)
+                };
+                valid = !danceLine.some(segment => 
+                    segment.x === newPerson.x && segment.y === newPerson.y
+                );
+            }
+        }
+
+        // Draw a pixelated person
+        function drawPerson(x, y, isLeader = false, index = 0) {
+            const px = x * GRID_SIZE;
+            const py = y * GRID_SIZE;
+            
+            // Dance animation offset
+            const danceOffset = Math.sin((danceFrame + index * 2) * 0.3) * 1;
+            
+            // Head
+            ctx.fillStyle = DARK_GREEN;
+            ctx.fillRect(px + 4, py + danceOffset, 4, 3);
+            
+            // Body
+            ctx.fillRect(px + 3, py + 3 + danceOffset, 6, 5);
+            
+            // Arms (animated for dancing)
+            const armOffset = Math.sin((danceFrame + index) * 0.5) * 1;
+            ctx.fillRect(px + 1, py + 3 + armOffset, 2, 3);
+            ctx.fillRect(px + 9, py + 3 - armOffset, 2, 3);
+            
+            // Legs
+            ctx.fillRect(px + 3, py + 8, 2, 4);
+            ctx.fillRect(px + 7, py + 8, 2, 4);
+            
+            // Leader has a special marker (hat)
+            if (isLeader) {
+                ctx.fillStyle = MID_GREEN;
+                ctx.fillRect(px + 3, py - 2 + danceOffset, 6, 2);
+            }
+        }
+
+        // Draw waiting person (the one to pick up)
+        function drawWaitingPerson(x, y) {
+            const px = x * GRID_SIZE;
+            const py = y * GRID_SIZE;
+            
+            // Jumping animation
+            const jumpOffset = Math.abs(Math.sin(danceFrame * 0.2)) * 3;
+            
+            // Head
+            ctx.fillStyle = DARK_GREEN;
+            ctx.fillRect(px + 4, py - jumpOffset, 4, 3);
+            
+            // Body
+            ctx.fillRect(px + 3, py + 3 - jumpOffset, 6, 5);
+            
+            // Arms up (waving)
+            ctx.fillRect(px + 1, py + 1 - jumpOffset, 2, 3);
+            ctx.fillRect(px + 9, py + 1 - jumpOffset, 2, 3);
+            
+            // Legs
+            ctx.fillRect(px + 3, py + 8 - jumpOffset, 2, 4);
+            ctx.fillRect(px + 7, py + 8 - jumpOffset, 2, 4);
+        }
+
+        // Main draw function
+        function draw() {
+            // Clear with background color
+            ctx.fillStyle = BG_GREEN;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid dots (subtle)
+            ctx.fillStyle = LIGHT_GREEN;
+            for (let x = 0; x < GRID_WIDTH; x++) {
+                for (let y = 0; y < GRID_HEIGHT; y++) {
+                    ctx.fillRect(x * GRID_SIZE + 5, y * GRID_SIZE + 5, 1, 1);
+                }
+            }
+            
+            // Draw the waiting person
+            drawWaitingPerson(newPerson.x, newPerson.y);
+            
+            // Draw the dance line
+            danceLine.forEach((segment, index) => {
+                drawPerson(segment.x, segment.y, index === 0, index);
+            });
+            
+            danceFrame++;
+        }
+
+        // Process queued input
+        function processInput() {
+            if (inputQueue.length > 0) {
+                const newDir = inputQueue.shift();
+                // Only apply if it's not reversing direction
+                if (newDir.x !== -direction.x || newDir.y !== -direction.y) {
+                    nextDirection = newDir;
+                }
+            }
+        }
+
+        // Update game state
+        function update() {
+            if (isGameOver || isPaused || isShowingHelp) return;
+            
+            // Process any queued input
+            processInput();
+            
+            direction = { ...nextDirection };
+            
+            // Calculate new head position
+            const head = danceLine[0];
+            const newHead = {
+                x: head.x + direction.x,
+                y: head.y + direction.y
+            };
+            
+            // Check wall collision
+            if (newHead.x < 0 || newHead.x >= GRID_WIDTH || 
+                newHead.y < 0 || newHead.y >= GRID_HEIGHT) {
+                gameOver();
+                return;
+            }
+            
+            // Check self collision
+            if (danceLine.some(segment => segment.x === newHead.x && segment.y === newHead.y)) {
+                gameOver();
+                return;
+            }
+            
+            // Add new head
+            danceLine.unshift(newHead);
+            
+            // Check if we picked up new person
+            if (newHead.x === newPerson.x && newHead.y === newPerson.y) {
+                updateDancerCount();
+                spawnNewPerson();
+                
+                // Speed up slightly
+                if (gameSpeed > 80) {
+                    gameSpeed -= 2;
+                }
+            } else {
+                // Remove tail if no pickup
+                danceLine.pop();
+            }
+        }
+
+        // Game over
+        function gameOver() {
+            isGameOver = true;
+            finalDancersEl.textContent = danceLine.length;
+            gameOverEl.style.display = 'block';
+        }
+
+        // Toggle help overlay
+        function toggleHelp() {
+            isShowingHelp = !isShowingHelp;
+            helpOverlay.style.display = isShowingHelp ? 'block' : 'none';
+        }
+
+        // Queue a direction change
+        function queueDirection(newDir) {
+            // Get the last queued direction or current direction
+            const lastDir = inputQueue.length > 0 ? inputQueue[inputQueue.length - 1] : direction;
+            
+            // Only queue if it's not a reversal of the last direction
+            if (newDir.x !== -lastDir.x || newDir.y !== -lastDir.y) {
+                // Limit queue size to prevent input flooding
+                if (inputQueue.length < 3) {
+                    inputQueue.push(newDir);
+                }
+            }
+        }
+
+        // Handle keyboard input
+        document.addEventListener('keydown', (e) => {
+            // Close help and start game on any key
+            if (isShowingHelp) {
+                isShowingHelp = false;
+                helpOverlay.style.display = 'none';
+                if (!gameStarted) {
+                    gameStarted = true;
+                    init();
+                }
+                return;
+            }
+            
+            if (isGameOver && e.code === 'Space') {
+                init();
+                return;
+            }
+            
+            if (e.code === 'Space') {
+                isPaused = !isPaused;
+                if (!isPaused) {
+                    lastUpdateTime = performance.now();
+                }
+                return;
+            }
+            
+            if (e.code === 'Escape') {
+                toggleHelp();
+                return;
+            }
+            
+            // Queue direction changes for immediate response
+            switch (e.code) {
+                case 'ArrowUp':
+                case 'KeyW':
+                    queueDirection({ x: 0, y: -1 });
+                    break;
+                case 'ArrowDown':
+                case 'KeyS':
+                    queueDirection({ x: 0, y: 1 });
+                    break;
+                case 'ArrowLeft':
+                case 'KeyA':
+                    queueDirection({ x: -1, y: 0 });
+                    break;
+                case 'ArrowRight':
+                case 'KeyD':
+                    queueDirection({ x: 1, y: 0 });
+                    break;
+            }
+        });
+
+        // Help button click
+        helpBtn.addEventListener('click', () => {
+            if (!isShowingHelp) {
+                isPaused = true;
+            }
+            toggleHelp();
+        });
+
+        // Prevent scrolling with arrow keys
+        window.addEventListener('keydown', (e) => {
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
+                e.preventDefault();
+            }
+        });
+
+        // Main game loop using requestAnimationFrame
+        function gameLoop(currentTime) {
+            // Calculate delta time
+            const deltaTime = currentTime - lastUpdateTime;
+            
+            // Update game state at fixed intervals
+            if (deltaTime >= gameSpeed && gameStarted && !isGameOver && !isPaused && !isShowingHelp) {
+                update();
+                lastUpdateTime = currentTime;
+            }
+            
+            // Always draw (for preview behind help and smooth animations)
+            draw();
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Show help on start, draw initial preview
+        helpOverlay.style.display = 'block';
+        
+        // Draw a preview
+        danceLine = [
+            { x: 5, y: Math.floor(GRID_HEIGHT / 2) },
+            { x: 4, y: Math.floor(GRID_HEIGHT / 2) },
+            { x: 3, y: Math.floor(GRID_HEIGHT / 2) }
+        ];
+        newPerson = { x: 15, y: Math.floor(GRID_HEIGHT / 2) };
+        draw();
+        
+        // Start the game loop
+        requestAnimationFrame(gameLoop);
+
+        // ===== MOBILE D-PAD CONTROLS =====
+        const btnUp = document.getElementById('btnUp');
+        const btnDown = document.getElementById('btnDown');
+        const btnLeft = document.getElementById('btnLeft');
+        const btnRight = document.getElementById('btnRight');
+
+        function handleDpadPress(dir) {
+            // Start game if showing help
+            if (isShowingHelp) {
+                isShowingHelp = false;
+                helpOverlay.style.display = 'none';
+                if (!gameStarted) {
+                    gameStarted = true;
+                    init();
+                }
+            }
+            
+            // Restart if game over
+            if (isGameOver) {
+                init();
+                return;
+            }
+            
+            // Unpause if paused
+            if (isPaused) {
+                isPaused = false;
+                lastUpdateTime = performance.now();
+            }
+            
+            // Queue the direction
+            queueDirection(dir);
+        }
+
+        // Touch events for D-pad buttons
+        btnUp.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleDpadPress({ x: 0, y: -1 });
+        }, { passive: false });
+
+        btnDown.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleDpadPress({ x: 0, y: 1 });
+        }, { passive: false });
+
+        btnLeft.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleDpadPress({ x: -1, y: 0 });
+        }, { passive: false });
+
+        btnRight.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleDpadPress({ x: 1, y: 0 });
+        }, { passive: false });
+
+        // Also support click for testing on desktop
+        btnUp.addEventListener('click', () => handleDpadPress({ x: 0, y: -1 }));
+        btnDown.addEventListener('click', () => handleDpadPress({ x: 0, y: 1 }));
+        btnLeft.addEventListener('click', () => handleDpadPress({ x: -1, y: 0 }));
+        btnRight.addEventListener('click', () => handleDpadPress({ x: 1, y: 0 }));
+
+        // Tap on screen (outside controls) to pause - for mobile
+        document.addEventListener('touchstart', (e) => {
+            // Ignore if touching controls or help button
+            if (e.target.closest('#mobileControls') || e.target.closest('#helpBtn')) {
+                return;
+            }
+            
+            // If showing help, close it and start
+            if (isShowingHelp) {
+                isShowingHelp = false;
+                helpOverlay.style.display = 'none';
+                if (!gameStarted) {
+                    gameStarted = true;
+                    init();
+                }
+                return;
+            }
+            
+            // If game over, restart
+            if (isGameOver) {
+                init();
+                return;
+            }
+            
+            // Otherwise toggle pause
+            isPaused = !isPaused;
+            if (!isPaused) {
+                lastUpdateTime = performance.now();
+            }
+        }, { passive: true });
+    </script>
+</body>
+</html>
