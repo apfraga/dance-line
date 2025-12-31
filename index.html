@@ -553,7 +553,7 @@
         let nextDirection = { x: 1, y: 0 };
         let inputQueue = []; // Queue for buffering inputs
         let newPerson = { x: 0, y: 0 };
-        let gameSpeed = 150;
+        let gameSpeed = 175;
         let isGameOver = false;
         let isPaused = false;
         let isShowingHelp = true;
@@ -583,7 +583,7 @@
             inputQueue = [];
             isGameOver = false;
             isPaused = false;
-            gameSpeed = 150;
+            gameSpeed = 175;
             lastUpdateTime = performance.now();
             raveCount = 0;
             lastRaveThreshold = 0;
@@ -735,7 +735,7 @@
                     ctx.font = 'bold 24px "Courier New", monospace';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText('RAVE ' + raveCount + '!', canvas.width / 2, 25);
+                    ctx.fillText('RAVE ' + raveCount, canvas.width / 2, 25);
                     ctx.textAlign = 'left';
                     ctx.textBaseline = 'alphabetic';
                 }
@@ -795,7 +795,7 @@
                 
                 // Speed up slightly
                 if (gameSpeed > 80) {
-                    gameSpeed -= 2;
+                    gameSpeed -= 1;
                 }
             } else {
                 // Remove tail if no pickup
@@ -880,10 +880,10 @@
             }
             
             // Left eye (single dancer)
-            drawSharePerson(centerX - 35, centerY - 15, 1.2);
+            drawSharePerson(centerX - 35, centerY - 30, 1.2);
             
             // Right eye (single dancer)
-            drawSharePerson(centerX + 20, centerY - 15, 1.2);
+            drawSharePerson(centerX + 20, centerY - 30, 1.2);
             
             // Smile (arc of dancers)
             const smileDancers = 5;
