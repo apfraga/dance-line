@@ -95,6 +95,12 @@
             font-weight: bold;
         }
 
+        .stats-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
         .help-btn {
             background: #0f380f;
             color: #9bbc0f;
@@ -131,7 +137,7 @@
             padding: 25px;
             text-align: center;
             display: none;
-            z-index: 100;
+            z-index: 200;
             min-width: 280px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
@@ -193,7 +199,7 @@
         }
 
         .help-content li::before {
-            content: '►';
+            content: '>';
             position: absolute;
             left: 0;
             color: #306230;
@@ -226,17 +232,17 @@
 
         .dpad {
             display: grid;
-            grid-template-columns: 60px 60px 60px;
-            grid-template-rows: 60px 60px 60px;
-            gap: 4px;
+            grid-template-columns: 70px 70px 70px;
+            grid-template-rows: 70px 70px 70px;
+            gap: 6px;
         }
 
         .dpad-btn {
-            background: rgba(15, 56, 15, 0.7);
-            border: 2px solid #0f380f;
-            border-radius: 8px;
+            background: linear-gradient(145deg, #1a5a1a, #0f380f);
+            border: 3px solid #306230;
+            border-radius: 14px;
             color: #9bbc0f;
-            font-size: 24px;
+            font-size: 28px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -244,10 +250,19 @@
             user-select: none;
             -webkit-user-select: none;
             -webkit-tap-highlight-color: transparent;
+            box-shadow: 
+                0 4px 8px rgba(0,0,0,0.4),
+                inset 0 1px 0 rgba(155, 188, 15, 0.2),
+                inset 0 -2px 0 rgba(0,0,0,0.3);
+            transition: transform 0.1s, box-shadow 0.1s;
         }
 
         .dpad-btn:active {
-            background: #0f380f;
+            background: linear-gradient(145deg, #0f380f, #1a5a1a);
+            transform: scale(0.95);
+            box-shadow: 
+                0 2px 4px rgba(0,0,0,0.4),
+                inset 0 2px 4px rgba(0,0,0,0.3);
         }
 
         .dpad-btn.up { grid-column: 2; grid-row: 1; }
@@ -258,9 +273,41 @@
         .dpad-center {
             grid-column: 2;
             grid-row: 2;
-            background: rgba(15, 56, 15, 0.3);
-            border: 2px solid rgba(15, 56, 15, 0.4);
-            border-radius: 8px;
+            background: radial-gradient(circle, #1a5a1a 0%, #0f380f 100%);
+            border: 3px solid #306230;
+            border-radius: 50%;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);
+        }
+
+        /* Game over share buttons */
+        .share-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .share-btn {
+            background: #0f380f;
+            color: #9bbc0f;
+            border: 2px solid #306230;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .share-btn:hover {
+            transform: scale(1.05);
+            background: #1a5a1a;
+        }
+
+        .share-btn:active {
+            transform: scale(0.98);
         }
 
         /* Mobile styles */
@@ -292,7 +339,11 @@
             }
 
             .score-display {
-                font-size: 12px;
+                font-size: 11px;
+            }
+
+            .stats-group {
+                gap: 8px;
             }
 
             #gameCanvas {
@@ -321,6 +372,11 @@
 
             .help-content li {
                 font-size: 11px;
+            }
+
+            .share-btn {
+                padding: 6px 12px;
+                font-size: 10px;
             }
         }
 
@@ -371,6 +427,11 @@
                 display: none !important;
             }
         }
+
+        /* Hidden canvas for share image */
+        #shareCanvas {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -379,7 +440,10 @@
             <div class="screen-header">
                 <span class="game-title">DANCE LINE</span>
                 <div class="header-right">
-                    <span class="score-display">DANCERS: <span id="score">3</span></span>
+                    <div class="stats-group">
+                        <span class="score-display">DANCERS: <span id="score">3</span></span>
+                        <span class="score-display">RAVES: <span id="raveCount">0</span></span>
+                    </div>
                     <button class="help-btn" id="helpBtn">?</button>
                 </div>
             </div>
@@ -389,6 +453,10 @@
             <div class="overlay" id="gameOver">
                 <h2>GAME OVER</h2>
                 <p class="highlight">Your Line: <span id="finalDancers">0</span> Dancers</p>
+                <p class="highlight">Raves Held: <span id="finalRaves">0</span></p>
+                <div class="share-buttons">
+                    <button class="share-btn" id="saveImageBtn">Save Image to Share</button>
+                </div>
                 <p class="blink-text keyboard-controls">PRESS SPACE TO PLAY AGAIN</p>
                 <p class="blink-text touch-controls">TAP TO PLAY AGAIN</p>
             </div>
@@ -399,14 +467,15 @@
                 <div class="help-content">
                     <h3>GOAL</h3>
                     <p style="text-align: center; font-size: 13px;">
-                        Build the longest dance line possible.<br>
-                        Pick up waiting dancers to grow your line.
+                        Build the longest line possible by picking up<br>
+                        waiting dancers. For every 25 dancers there<br>
+                        will be a rave. 
                     </p>
                     
                     <h3>CONTROLS</h3>
                     <div class="keyboard-controls">
                         <ul>
-                            <li><span class="key">↑</span> <span class="key">↓</span> <span class="key">←</span> <span class="key">→</span> Move your line</li>
+                            <li><span class="key">Arrow Keys</span> Move your line</li>
                             <li><span class="key">SPACE</span> Pause the game</li>
                         </ul>
                     </div>
@@ -431,22 +500,30 @@
     <!-- Mobile D-Pad Controls -->
     <div class="mobile-controls" id="mobileControls">
         <div class="dpad">
-            <button class="dpad-btn up" id="btnUp">▲</button>
-            <button class="dpad-btn left" id="btnLeft">◄</button>
+            <button class="dpad-btn up" id="btnUp">&#9650;</button>
+            <button class="dpad-btn left" id="btnLeft">&#9664;</button>
             <div class="dpad-center"></div>
-            <button class="dpad-btn right" id="btnRight">►</button>
-            <button class="dpad-btn down" id="btnDown">▼</button>
+            <button class="dpad-btn right" id="btnRight">&#9654;</button>
+            <button class="dpad-btn down" id="btnDown">&#9660;</button>
         </div>
     </div>
+
+    <!-- Hidden canvas for generating share image -->
+    <canvas id="shareCanvas" width="400" height="400"></canvas>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreDisplay = document.getElementById('score');
+        const raveCountDisplay = document.getElementById('raveCount');
         const gameOverEl = document.getElementById('gameOver');
         const finalDancersEl = document.getElementById('finalDancers');
+        const finalRavesEl = document.getElementById('finalRaves');
         const helpOverlay = document.getElementById('helpOverlay');
         const helpBtn = document.getElementById('helpBtn');
+        const saveImageBtn = document.getElementById('saveImageBtn');
+        const shareCanvas = document.getElementById('shareCanvas');
+        const shareCtx = shareCanvas.getContext('2d');
 
         // Game constants
         const GRID_SIZE = 12;
@@ -458,6 +535,15 @@
         const MID_GREEN = '#306230';
         const LIGHT_GREEN = '#8bac0f';
         const BG_GREEN = '#9bbc0f';
+        
+        // Rave colors (softer, not too flashy for epilepsy safety)
+        const RAVE_COLORS = [
+            'rgba(255, 100, 150, 0.3)',
+            'rgba(100, 150, 255, 0.3)',
+            'rgba(150, 255, 100, 0.3)',
+            'rgba(255, 200, 100, 0.3)',
+            'rgba(200, 100, 255, 0.3)'
+        ];
 
         // Game state
         let danceLine = [];
@@ -472,6 +558,16 @@
         let gameStarted = false;
         let danceFrame = 0;
         let lastUpdateTime = 0;
+        let raveCount = 0;
+        let lastRaveThreshold = 0;
+        
+        // Rave state
+        let isRaving = false;
+        let raveStartTime = 0;
+        let raveColorIndex = 0;
+        let lastRaveColorChange = 0;
+        const RAVE_DURATION = 3000; // 3 seconds
+        const RAVE_COLOR_INTERVAL = 300; // Change color every 300ms (slow enough to be safe)
 
         // Initialize game
         function init() {
@@ -487,13 +583,40 @@
             isPaused = false;
             gameSpeed = 150;
             lastUpdateTime = performance.now();
+            raveCount = 0;
+            lastRaveThreshold = 0;
+            isRaving = false;
             updateDancerCount();
+            updateRaveCount();
             gameOverEl.style.display = 'none';
             spawnNewPerson();
         }
 
         function updateDancerCount() {
             scoreDisplay.textContent = danceLine.length;
+        }
+
+        function updateRaveCount() {
+            raveCountDisplay.textContent = raveCount;
+        }
+
+        // Check for rave milestone
+        function checkRave() {
+            const currentThreshold = Math.floor(danceLine.length / 25) * 25;
+            if (currentThreshold > lastRaveThreshold && currentThreshold >= 25) {
+                lastRaveThreshold = currentThreshold;
+                raveCount = currentThreshold / 25;
+                updateRaveCount();
+                triggerRave();
+            }
+        }
+
+        // Trigger rave celebration
+        function triggerRave() {
+            isRaving = true;
+            raveStartTime = performance.now();
+            raveColorIndex = 0;
+            lastRaveColorChange = 0;
         }
 
         // Spawn a new person to pick up
@@ -587,6 +710,35 @@
                 drawPerson(segment.x, segment.y, index === 0, index);
             });
             
+            // Draw rave overlay effect if raving
+            if (isRaving) {
+                const now = performance.now();
+                const raveElapsed = now - raveStartTime;
+                
+                if (raveElapsed >= RAVE_DURATION) {
+                    isRaving = false;
+                } else {
+                    // Change color at safe interval
+                    if (now - lastRaveColorChange >= RAVE_COLOR_INTERVAL) {
+                        raveColorIndex = (raveColorIndex + 1) % RAVE_COLORS.length;
+                        lastRaveColorChange = now;
+                    }
+                    
+                    // Draw color overlay
+                    ctx.fillStyle = RAVE_COLORS[raveColorIndex];
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Draw "RAVE!" text
+                    ctx.fillStyle = DARK_GREEN;
+                    ctx.font = 'bold 24px "Courier New", monospace';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('RAVE ' + raveCount + '!', canvas.width / 2, 25);
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'alphabetic';
+                }
+            }
+            
             danceFrame++;
         }
 
@@ -636,6 +788,7 @@
             // Check if we picked up new person
             if (newHead.x === newPerson.x && newHead.y === newPerson.y) {
                 updateDancerCount();
+                checkRave();
                 spawnNewPerson();
                 
                 // Speed up slightly
@@ -651,9 +804,127 @@
         // Game over
         function gameOver() {
             isGameOver = true;
+            isRaving = false;
             finalDancersEl.textContent = danceLine.length;
+            finalRavesEl.textContent = raveCount;
             gameOverEl.style.display = 'block';
         }
+
+        // Draw a person on share canvas
+        function drawSharePerson(x, y, scale = 1) {
+            const s = scale;
+            // Head
+            shareCtx.fillRect(x + 4*s, y, 4*s, 3*s);
+            // Body
+            shareCtx.fillRect(x + 3*s, y + 3*s, 6*s, 5*s);
+            // Arms up
+            shareCtx.fillRect(x + 1*s, y + 2*s, 2*s, 3*s);
+            shareCtx.fillRect(x + 9*s, y + 2*s, 2*s, 3*s);
+            // Legs
+            shareCtx.fillRect(x + 3*s, y + 8*s, 2*s, 4*s);
+            shareCtx.fillRect(x + 7*s, y + 8*s, 2*s, 4*s);
+        }
+
+        // Generate share image with smiley face made of dancers
+        function generateShareImage() {
+            // Set canvas size
+            shareCanvas.width = 400;
+            shareCanvas.height = 400;
+            
+            // Background
+            shareCtx.fillStyle = BG_GREEN;
+            shareCtx.fillRect(0, 0, shareCanvas.width, shareCanvas.height);
+            
+            // Border
+            shareCtx.strokeStyle = DARK_GREEN;
+            shareCtx.lineWidth = 8;
+            shareCtx.strokeRect(4, 4, shareCanvas.width - 8, shareCanvas.height - 8);
+            
+            // Inner border
+            shareCtx.strokeStyle = MID_GREEN;
+            shareCtx.lineWidth = 4;
+            shareCtx.strokeRect(12, 12, shareCanvas.width - 24, shareCanvas.height - 24);
+            
+            // Title
+            shareCtx.fillStyle = DARK_GREEN;
+            shareCtx.font = 'bold 36px "Courier New", monospace';
+            shareCtx.textAlign = 'center';
+            shareCtx.fillText('DANCE LINE', shareCanvas.width / 2, 55);
+            
+            // Score
+            shareCtx.font = 'bold 28px "Courier New", monospace';
+            shareCtx.fillText(danceLine.length + ' DANCERS', shareCanvas.width / 2, 95);
+            
+            // Raves
+            shareCtx.font = 'bold 22px "Courier New", monospace';
+            shareCtx.fillStyle = MID_GREEN;
+            shareCtx.fillText(raveCount + ' RAVES HELD', shareCanvas.width / 2, 125);
+            
+            // Draw smiley face made of dancers
+            shareCtx.fillStyle = DARK_GREEN;
+            const centerX = shareCanvas.width / 2;
+            const centerY = 230;
+            const faceRadius = 80;
+            
+            // Draw circle outline with dancers
+            const numDancers = 16;
+            for (let i = 0; i < numDancers; i++) {
+                const angle = (i / numDancers) * Math.PI * 2 - Math.PI / 2;
+                const x = centerX + Math.cos(angle) * faceRadius - 6;
+                const y = centerY + Math.sin(angle) * faceRadius - 6;
+                drawSharePerson(x, y, 1);
+            }
+            
+            // Left eye (single dancer)
+            drawSharePerson(centerX - 35, centerY - 15, 1.2);
+            
+            // Right eye (single dancer)
+            drawSharePerson(centerX + 20, centerY - 15, 1.2);
+            
+            // Smile (arc of dancers)
+            const smileDancers = 5;
+            for (let i = 0; i < smileDancers; i++) {
+                const angle = (i / (smileDancers - 1)) * Math.PI * 0.6 + Math.PI * 0.2;
+                const x = centerX + Math.cos(angle) * 45 - 6;
+                const y = centerY + 15 + Math.sin(angle) * 25 - 6;
+                drawSharePerson(x, y, 1);
+            }
+            
+            // URL/branding
+            shareCtx.font = 'bold 16px "Courier New", monospace';
+            shareCtx.fillStyle = DARK_GREEN;
+            shareCtx.fillText('Play at:', shareCanvas.width / 2, 340);
+            shareCtx.font = '14px "Courier New", monospace';
+            shareCtx.fillText('dance-line.netlify.app', shareCanvas.width / 2, 360);
+            
+            return shareCanvas.toDataURL('image/png');
+        }
+
+        // Save image
+        function saveShareImage() {
+            const imageData = generateShareImage();
+            downloadImage(imageData);
+        }
+
+        function downloadImage(imageData) {
+            const link = document.createElement('a');
+            link.download = 'dance-line-score.png';
+            link.href = imageData;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            saveImageBtn.textContent = 'Saved!';
+            setTimeout(() => {
+                saveImageBtn.textContent = 'Save Image to Share';
+            }, 2000);
+        }
+
+        // Share button handler
+        saveImageBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            saveShareImage();
+        });
 
         // Toggle help overlay
         function toggleHelp() {
@@ -836,8 +1107,10 @@
 
         // Tap on screen (outside controls) to pause - for mobile
         document.addEventListener('touchstart', (e) => {
-            // Ignore if touching controls or help button
-            if (e.target.closest('#mobileControls') || e.target.closest('#helpBtn')) {
+            // Ignore if touching controls, help button, or share buttons
+            if (e.target.closest('#mobileControls') || 
+                e.target.closest('#helpBtn') ||
+                e.target.closest('.share-buttons')) {
                 return;
             }
             
@@ -852,9 +1125,11 @@
                 return;
             }
             
-            // If game over, restart
+            // If game over, don't restart on tap near share buttons
             if (isGameOver) {
-                init();
+                if (!e.target.closest('.overlay')) {
+                    init();
+                }
                 return;
             }
             
