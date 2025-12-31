@@ -904,17 +904,47 @@
 
         // Save image
         function saveShareImage() {
-            const imageData = generateShareImage();
-            downloadImage(imageData);
+            generateShareImage();
+            
+            // Convert canvas to blob for sharing
+            shareCanvas.toBlob(function(blob) {
+                // Check if we can use native share with files (mobile)
+                if (navigator.share && navigator.canShare) {
+                    const file = new File([blob], 'dance-line-score.png', { type: 'image/png' });
+                    const shareData = { files: [file] };
+                    
+                    if (navigator.canShare(shareData)) {
+                        navigator.share(shareData)
+                            .then(() => {
+                                saveImageBtn.textContent = 'Shared!';
+                                setTimeout(() => {
+                                    saveImageBtn.textContent = 'Save Image to Share';
+                                }, 2000);
+                            })
+                            .catch((err) => {
+                                // User cancelled or error - fall back to download
+                                if (err.name !== 'AbortError') {
+                                    downloadImageFromBlob(blob);
+                                }
+                            });
+                        return;
+                    }
+                }
+                
+                // Fallback for desktop or browsers without share API
+                downloadImageFromBlob(blob);
+            }, 'image/png');
         }
 
-        function downloadImage(imageData) {
+        function downloadImageFromBlob(blob) {
+            const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.download = 'dance-line-score.png';
-            link.href = imageData;
+            link.href = url;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(url);
             
             saveImageBtn.textContent = 'Saved!';
             setTimeout(() => {
