@@ -232,9 +232,9 @@
 
         .dpad {
             display: grid;
-            grid-template-columns: 70px 70px 70px;
-            grid-template-rows: 70px 70px 70px;
-            gap: 6px;
+            grid-template-columns: 60px 60px 60px;
+            grid-template-rows: 60px 60px 60px;
+            gap: 4px;
         }
 
         .dpad-btn {
@@ -355,6 +355,7 @@
                 padding: 15px;
                 min-width: 200px;
                 max-width: 90%;
+                top: 55%;
             }
 
             .overlay h2 {
@@ -467,9 +468,9 @@
                 <div class="help-content">
                     <h3>GOAL</h3>
                     <p style="text-align: center; font-size: 13px;">
-                        Build the longest line possible by picking up<br>
-                        waiting dancers. For every 25 dancers there<br>
-                        will be a rave. 
+                        Build the longest line possible by picking<br>
+                        up dancers. For every 25 dancers there<br>
+                        will be a rave.
                     </p>
                     
                     <h3>CONTROLS</h3>
@@ -527,8 +528,9 @@
 
         // Game constants
         const GRID_SIZE = 12;
+        const GRID_PADDING_TOP = 3; // Small padding to prevent head cutoff
         const GRID_WIDTH = Math.floor(canvas.width / GRID_SIZE);
-        const GRID_HEIGHT = Math.floor(canvas.height / GRID_SIZE);
+        const GRID_HEIGHT = Math.floor((canvas.height - GRID_PADDING_TOP) / GRID_SIZE);
         
         // Colors matching green LCD screen
         const DARK_GREEN = '#0f380f';
@@ -636,7 +638,7 @@
         // Draw a pixelated person
         function drawPerson(x, y, isLeader = false, index = 0) {
             const px = x * GRID_SIZE;
-            const py = y * GRID_SIZE;
+            const py = y * GRID_SIZE + GRID_PADDING_TOP;
             
             // Dance animation offset
             const danceOffset = Math.sin((danceFrame + index * 2) * 0.3) * 1;
@@ -667,7 +669,7 @@
         // Draw waiting person (the one to pick up)
         function drawWaitingPerson(x, y) {
             const px = x * GRID_SIZE;
-            const py = y * GRID_SIZE;
+            const py = y * GRID_SIZE + GRID_PADDING_TOP;
             
             // Jumping animation
             const jumpOffset = Math.abs(Math.sin(danceFrame * 0.2)) * 3;
@@ -698,7 +700,7 @@
             ctx.fillStyle = LIGHT_GREEN;
             for (let x = 0; x < GRID_WIDTH; x++) {
                 for (let y = 0; y < GRID_HEIGHT; y++) {
-                    ctx.fillRect(x * GRID_SIZE + 5, y * GRID_SIZE + 5, 1, 1);
+                    ctx.fillRect(x * GRID_SIZE + 5, y * GRID_SIZE + GRID_PADDING_TOP + 5, 1, 1);
                 }
             }
             
