@@ -829,42 +829,44 @@
 
         // Generate share image with smiley face made of dancers
         function generateShareImage() {
-            // Set canvas size
-            shareCanvas.width = 400;
-            shareCanvas.height = 400;
+            // Set canvas size at 2x for higher resolution
+            const scale = 2;
+            shareCanvas.width = 400 * scale;
+            shareCanvas.height = 400 * scale;
+            shareCtx.scale(scale, scale);
             
-            // Background
+            // Background - brighter green like the game
             shareCtx.fillStyle = BG_GREEN;
-            shareCtx.fillRect(0, 0, shareCanvas.width, shareCanvas.height);
+            shareCtx.fillRect(0, 0, 400, 400);
             
             // Border
             shareCtx.strokeStyle = DARK_GREEN;
             shareCtx.lineWidth = 8;
-            shareCtx.strokeRect(4, 4, shareCanvas.width - 8, shareCanvas.height - 8);
+            shareCtx.strokeRect(4, 4, 400 - 8, 400 - 8);
             
             // Inner border
             shareCtx.strokeStyle = MID_GREEN;
             shareCtx.lineWidth = 4;
-            shareCtx.strokeRect(12, 12, shareCanvas.width - 24, shareCanvas.height - 24);
+            shareCtx.strokeRect(12, 12, 400 - 24, 400 - 24);
             
             // Title
             shareCtx.fillStyle = DARK_GREEN;
             shareCtx.font = 'bold 36px "Courier New", monospace';
             shareCtx.textAlign = 'center';
-            shareCtx.fillText('DANCE LINE', shareCanvas.width / 2, 55);
+            shareCtx.fillText('DANCE LINE', 200, 55);
             
             // Score
             shareCtx.font = 'bold 28px "Courier New", monospace';
-            shareCtx.fillText(danceLine.length + ' DANCERS', shareCanvas.width / 2, 95);
+            shareCtx.fillText(danceLine.length + ' DANCERS', 200, 95);
             
             // Raves
             shareCtx.font = 'bold 22px "Courier New", monospace';
             shareCtx.fillStyle = MID_GREEN;
-            shareCtx.fillText(raveCount + ' RAVES HELD', shareCanvas.width / 2, 125);
+            shareCtx.fillText(raveCount + ' RAVES HELD', 200, 125);
             
             // Draw smiley face made of dancers
             shareCtx.fillStyle = DARK_GREEN;
-            const centerX = shareCanvas.width / 2;
+            const centerX = 200;
             const centerY = 230;
             const faceRadius = 80;
             
@@ -895,9 +897,12 @@
             // URL/branding
             shareCtx.font = 'bold 16px "Courier New", monospace';
             shareCtx.fillStyle = DARK_GREEN;
-            shareCtx.fillText('Play at:', shareCanvas.width / 2, 340);
+            shareCtx.fillText('Play at:', 200, 340);
             shareCtx.font = '14px "Courier New", monospace';
-            shareCtx.fillText('dance-line.netlify.app', shareCanvas.width / 2, 360);
+            shareCtx.fillText('dance-line.netlify.app', 200, 360);
+            
+            // Reset scale for next use
+            shareCtx.setTransform(1, 0, 0, 1, 0, 0);
             
             return shareCanvas.toDataURL('image/png');
         }
@@ -916,7 +921,7 @@
                     if (navigator.canShare(shareData)) {
                         navigator.share(shareData)
                             .then(() => {
-                                saveImageBtn.textContent = 'Shared!';
+                                saveImageBtn.textContent = 'Done!';
                                 setTimeout(() => {
                                     saveImageBtn.textContent = 'Save Image to Share';
                                 }, 2000);
@@ -946,7 +951,7 @@
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
             
-            saveImageBtn.textContent = 'Saved!';
+            saveImageBtn.textContent = 'Done!';
             setTimeout(() => {
                 saveImageBtn.textContent = 'Save Image to Share';
             }, 2000);
