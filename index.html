@@ -454,7 +454,7 @@
             <div class="overlay" id="gameOver">
                 <h2>GAME OVER</h2>
                 <p class="highlight">Your Line: <span id="finalDancers">0</span> Dancers</p>
-                <p class="highlight">Raves Held: <span id="finalRaves">0</span></p>
+                <p class="highlight"><span id="finalRavesLabel">Raves</span> Held: <span id="finalRaves">0</span></p>
                 <div class="share-buttons">
                     <button class="share-btn" id="saveImageBtn">Save Image to Share</button>
                 </div>
@@ -520,6 +520,7 @@
         const gameOverEl = document.getElementById('gameOver');
         const finalDancersEl = document.getElementById('finalDancers');
         const finalRavesEl = document.getElementById('finalRaves');
+        const finalRavesLabelEl = document.getElementById('finalRavesLabel');
         const helpOverlay = document.getElementById('helpOverlay');
         const helpBtn = document.getElementById('helpBtn');
         const saveImageBtn = document.getElementById('saveImageBtn');
@@ -809,6 +810,7 @@
             isRaving = false;
             finalDancersEl.textContent = danceLine.length;
             finalRavesEl.textContent = raveCount;
+            finalRavesLabelEl.textContent = raveCount === 1 ? 'Rave' : 'Raves';
             gameOverEl.style.display = 'block';
         }
 
@@ -862,7 +864,7 @@
             // Raves
             shareCtx.font = 'bold 22px "Courier New", monospace';
             shareCtx.fillStyle = MID_GREEN;
-            shareCtx.fillText(raveCount + ' RAVES HELD', 200, 125);
+            shareCtx.fillText(raveCount + (raveCount === 1 ? ' RAVE HELD' : ' RAVES HELD'), 200, 125);
             
             // Draw smiley face made of dancers
             shareCtx.fillStyle = DARK_GREEN;
